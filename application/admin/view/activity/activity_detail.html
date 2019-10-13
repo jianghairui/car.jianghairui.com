@@ -1,0 +1,153 @@
+<style>
+    .thumbnail{ width:400px;}
+</style>
+<article class="page-container">
+    <form class="form form-horizontal" id="form-article-add">
+
+        <div class="row cl" id="picsize">
+            <label class="form-label col-xs-4 col-sm-2"><span class="c-red">*</span></label>
+            <div class="formControls col-xs-8 col-sm-9">
+                    <span style="font-size: 16px">
+                        (建议尺寸: 420*210)
+                    </span>
+            </div>
+        </div>
+        <div class="row cl" id="pic">
+            <label class="form-label col-xs-4 col-sm-2">
+                <span id="btn-star" class="btn btn-primary btn-uploadstar radius ml-10">活动图片</span>
+            </label>
+            <div class="formControls col-xs-8 col-sm-9">
+                <div class="uploader-thum-container">
+                    <div id="fileList" class="uploader-list">
+                        <img class="thumbnail" src="/{$info.pic}" alt="">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row cl">
+            <label class="form-label col-xs-4 col-sm-2"><span class="c-red">*</span>活动标题：</label>
+            <div class="formControls col-xs-8 col-sm-9">
+                <input type="text" class="input-text" value="{$info.title}" placeholder="" id="title" name="title" maxlength="50">
+            </div>
+        </div>
+        <div class="row cl">
+            <label class="form-label col-xs-4 col-sm-2">简介：</label>
+            <div class="formControls col-xs-8 col-sm-9">
+                <textarea name="desc" cols="" rows="" class="textarea" maxlength="255" placeholder="" oninput="this.value.length<=255?$('#textlen1').text(this.value.length):$('#textlen1').text(255)" >{$info.desc}</textarea>
+                <p class="textarea-numberbar"><em class="textarea-length" id="textlen1">0</em>/255</p>
+            </div>
+        </div>
+        <div class="row cl">
+            <label class="form-label col-xs-4 col-sm-2"><span class="c-red">*</span>状态：</label>
+            <div class="formControls col-xs-8 col-sm-9 skin-minimal">
+                <div class="radio-box">
+                    <input name="status" type="radio" id="sex-1" value="1" {if $info['status'] == 1}checked{/if}>
+                    <label for="sex-1">显示</label>
+                </div>
+                <div class="radio-box">
+                    <input name="status" type="radio" id="sex-2" value="0" {if $info['status'] == 0}checked{/if}>
+                    <label for="sex-2">隐藏</label>
+                </div>
+            </div>
+        </div>
+        <div class="row cl">
+            <label class="form-label col-xs-4 col-sm-2">活动内容：</label>
+            <div class="formControls col-xs-8 col-sm-9">
+                <textarea id="editor" type="text/plain" name="content" style="width:100%;height:400px;">{$info.content}</textarea>
+            </div>
+        </div>
+        <div class="row cl">
+            <div class="col-xs-8 col-sm-9 col-xs-offset-4 col-sm-offset-2">
+                <button class="btn btn-primary radius" type="submit"><i class="Hui-iconfont">&#xe632;</i> 保存</button>
+                <button onClick="layer_close();" class="btn btn-default radius" type="button">&nbsp;&nbsp;取消&nbsp;&nbsp;</button>
+            </div>
+        </div>
+        <input type="file" name="file" id="file" style="display: none;">
+        <input type="hidden" name="id" value="{$info.id}">
+    </form>
+</article>
+
+
+<script type="text/javascript" src="/lib/My97DatePicker/4.8/WdatePicker.js"></script>
+<script type="text/javascript" src="/lib/jquery.validation/1.14.0/jquery.validate.js"></script>
+<script type="text/javascript" src="/lib/jquery.validation/1.14.0/validate-methods.js"></script>
+<script type="text/javascript" src="/lib/jquery.validation/1.14.0/messages_zh.js"></script>
+
+<script type="text/javascript" src="/lib/ueditor/1.4.3/ueditor.config.js"></script>
+<script type="text/javascript" src="/lib/ueditor/1.4.3/ueditor.all.min.js"> </script>
+<script type="text/javascript" src="/lib/ueditor/1.4.3/lang/zh-cn/zh-cn.js"></script>
+<script type="text/javascript" src="/lib/checkfile.js"></script>
+<script type="text/javascript">
+    $(function(){
+
+        var ue = UE.getEditor('editor');
+
+        $('.skin-minimal input').iCheck({
+            checkboxClass: 'icheckbox-blue',
+            radioClass: 'iradio-blue',
+            increaseArea: '20%'
+        });
+
+        var isclick = true;
+        //表单验证
+        $("#form-article-add").validate({
+            rules:{
+                title:{
+                    required:true,
+                    maxlength:50
+                },
+                desc:{
+                    required:true,
+                    maxlength:255
+                },
+            },
+            focusCleanup:true,
+            success:"valid",
+            submitHandler:function(form){
+                if(isclick === true) {
+                    isclick = false;
+                    $(form).ajaxSubmit({
+                        type: 'post',
+                        url: "{:url('Activity/activityMod')}" ,
+                        success: function(data){
+                            // console.log(data.data);isclick=true;return;
+                            if(data.code == 1) {
+                                layer.msg('保存成功!',{icon:1,time:1000},function () {
+                                    window.parent.location.reload()
+                                });
+                            }else {
+                                layer.msg(data.data,{icon:2,time:1000});
+                                isclick = true
+                            }
+
+                        },
+                        error: function(XmlHttpRequest, textStatus, errorThrown){
+                            layer.msg('error!',{icon:5,time:1000});
+                            isclick = true
+                        }
+                    });
+                }
+
+            }
+        });
+
+
+        $("#btn-star").click(function(){
+            $("#file").click();
+            $("#file").change(function(e){
+                if(checkfile('file') !== true) {
+                    $("#file").val('');
+                    $("#fileList").html('');
+                    return false
+                }
+                var img = e.target.files[0];
+                var src = window.URL.createObjectURL(img);
+                $("#fileList").html('<img class="thumbnail" src="'+src+'">');
+            });
+        });
+
+        var textlen1 = $("textarea[name='desc']").val().length;
+        $("#textlen1").text(textlen1);
+
+    });
+</script>
