@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>详情</title>
+    <link rel="stylesheet" href="/static/assets/css/swiper.min.css">
+    <link rel="stylesheet" href="/static/assets/css/style.css">
+    <script src="/static/assets/js/window.js"></script>
+</head>
+<body>
+<div class="detail">
+    <div class="img"><img src="/{$info.pic}" alt=""></div>
+    <form id="formAjax" class="form">
+        <div class="form1">
+            <div class="inputbox"><label for="name">姓名</label><input type="text" placeholder="" name="name" id="name" value="" maxlength="30"></div>
+            <div class="inputbox"><label for="tel">电话</label><input type="number" placeholder="" name="tel" id="tel" value="" maxlength="15"></div>
+        </div>
+        <div class="form1 form2">
+            {foreach $tags as $li}
+            <div class="checktbox">
+                <input type="checkbox" placeholder="" value="{$li.id}" id="xq{$li.id}" name="tag_ids[]">
+                <label for="xq{$li.id}">
+                    <span class="checkimg"><img src="/static/assets/imgs/check.png" alt=""></span>
+                    <span>{$li.tag_name}</span>
+                </label>
+            </div>
+            {/foreach}
+        </div>
+        <div class="form1 form3">
+            <textarea name="remark" id="remark" placeholder="填写备注" maxlength="255"></textarea>
+        </div>
+        <div class="detail_content">
+            <div class="detail_title">
+                <span class="line"></span>
+                <span class="text">图文详情</span>
+                <span class="line"></span>
+            </div>
+        </div>
+        <style>
+            #detail{width: 96%;margin-left: 2%}
+            #detail img {width: 100% !important}
+            #detail p{line-height: 14px !important;}
+        </style>
+        <div style="" id="detail">
+            <?php echo $info['content'];?>
+        </div>
+        <div class="detail_btn">提交</div>
+        <input type="hidden" name="activity_id" value="{$info.id}">
+    </form>
+</div>
+</body>
+</html>
+<script src="/static/assets/js/jquery-1.12.4.min.js"></script>
+<script src="/static/assets/js/swiper.jquery.min.js"></script>
+<script src="/lib/jquery.form.js"></script>
+<script>
+    $(document).ready(function () {
+
+        var isclick = true;
+
+        $('.detail_btn').click(function () {
+            var name = $('#name').val();
+            var tel = $('#tel').val();
+            var telReg = /^1\d{10}$/gi
+
+            if (name == '') {
+                Toast('请输入姓名')
+            } else if (tel == '') {
+                Toast('请输入手机号')
+            } else if (!telReg.test(tel)) {
+                Toast('请输入正确的手机号')
+            } else {
+                // TO DO sth
+                if(isclick) {
+                    isclick = false;
+                    $('#formAjax').ajaxSubmit({
+                        type: 'POST',
+                        url: "{:url('Index/appoint')}",
+                        dataType: 'json',
+                        success: function(data){
+                            console.log(data);
+                            if(data.code == 1) {
+                                Toast('提交成功')
+                            }else {
+                                Toast(data.data);
+                            }
+                            isclick = true;
+                        },
+                        error:function(data) {
+                            Toast('网络异常');
+                            isclick = true;
+                        },
+                    });
+                }
+            }
+
+        });
+
+        function Toast(msg, duration) {
+            duration = isNaN(duration) ? 3000 : duration;
+            var m = document.createElement('div');
+            m.innerHTML = msg;
+            m.style.cssText = "max-width:60%;min-width: 150px;padding:0 14px;height: 40px;color: rgb(255, 255, 255);line-height: 40px;text-align: center;border-radius: 4px;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);z-index: 999999;background: rgba(0, 0, 0,.7);font-size: 16px;";
+            document.body.appendChild(m);
+            setTimeout(function () {
+                var d = 0.5;
+                m.style.webkitTransition = '-webkit-transform ' + d + 's ease-in, opacity ' + d + 's ease-in';
+                m.style.opacity = '0';
+                setTimeout(function () {
+                    document.body.removeChild(m)
+                }, d * 1000);
+            }, duration);
+        }
+    })
+</script>

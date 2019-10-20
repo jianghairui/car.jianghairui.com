@@ -180,8 +180,156 @@ class Activity extends Base {
     }
     
 
+
+    //预约列表
     public function orderList() {
+        $param['contact'] = input('param.contact','');
+        $param['datemin'] = input('param.datemin');
+        $param['datemax'] = input('param.datemax');
+        $param['search'] = input('param.search');
+
+        $page['query'] = http_build_query(input('param.'));
+
+        $curr_page = input('param.page',1);
+        $perpage = input('param.perpage',10);
+
+        $where = [];
+
+        if(!is_null($param['contact']) && $param['contact'] !== '') {
+            $where[] = ['contact','=',$param['contact']];
+        }
+        if($param['datemin']) {
+            $where[] = ['create_time','>=',strtotime(date('Y-m-d 00:00:00',strtotime($param['datemin'])))];
+        }
+
+        if($param['datemax']) {
+            $where[] = ['create_time','<=',strtotime(date('Y-m-d 23:59:59',strtotime($param['datemax'])))];
+        }
+
+        if($param['search']) {
+            $where[] = ['name|tel','like',"%{$param['search']}%"];
+        }
+        $order = ['id'=>'DESC'];
+        try {
+            $count = Db::table('mp_activity_order')->where($where)->count();
+            $page['count'] = $count;
+            $page['curr'] = $curr_page;
+            $page['totalPage'] = ceil($count/$perpage);
+            $list = Db::table('mp_activity_order')->where($where)
+                ->order($order)
+                ->limit(($curr_page - 1)*$perpage,$perpage)->select();
+            $tag_list = Db::table('mp_activity_tags')->where('del','=',0)->select();
+            $tag_arr = [];
+            foreach ($tag_list as $v) {
+                $tag_arr[$v['id']] = $v['tag_name'];
+            }
+        } catch (\Exception $e) {
+            return ajax($e->getMessage(), -1);
+        }
+        foreach ($list as &$v) {
+            $ids = explode(',',$v['tag_ids']);
+            $tag_names = [];
+            foreach ($ids as $vv) {
+                if(isset($tag_arr[$vv])) {
+                    $tag_names[] = $tag_arr[$vv];
+                }
+            }
+            $v['tag_names'] = $tag_names;
+        }
+        $this->assign('list',$list);
+        $this->assign('page',$page);
+        $this->assign('param',$param);
         return $this->fetch();
     }
+
+    public function signContact() {
+        $id = input('post.id');
+        try {
+            $where = [
+                ['id','=',$id]
+            ];
+            Db::table('mp_activity_order')->where($where)->update(['contact'=>1]);
+        } catch (\Exception $e) {
+            return ajax($e->getMessage(), -1);
+        }
+        return ajax();
+    }
+
+
+    //标签列表
+    public function tagList() {
+        $where = [
+            ['del','=',0]
+        ];
+        try {
+            $list = Db::table('mp_activity_tags')->where($where)->select();
+        }catch (\Exception $e) {
+            die($e->getMessage());
+        }
+        $this->assign('list',$list);
+        return $this->fetch();
+    }
+//添加标签
+    public function tagAdd() {
+        return $this->fetch();
+    }
+//添加标签POST
+    public function tagAddPost() {
+        $val['tag_name'] = input('post.tag_name');
+        checkPost($val);
+        try {
+            $count = Db::table('mp_activity_tags')->where('del','=',0)->count();
+            if($count >= 10) {
+                return ajax('最多添加10个',-1);
+            }
+            Db::table('mp_activity_tags')->insert($val);
+        }catch (\Exception $e) {
+            return ajax($e->getMessage(),-1);
+        }
+        return ajax([]);
+    }
+//标签详情
+    public function tagDetail() {
+        $id = input('param.id');
+        try {
+            $info = Db::table('mp_activity_tags')->where('id',$id)->find();
+        }catch (\Exception $e) {
+            die($e->getMessage());
+        }
+        $this->assign('info',$info);
+        return $this->fetch();
+    }
+//修改标签POST
+    public function tagModPost() {
+        $val['tag_name'] = input('post.tag_name');
+        $val['id'] = input('post.id');
+        checkPost($val);
+        try {
+            $exist = Db::table('mp_activity_tags')->where('id',$val['id'])->find();
+            if(!$exist) {
+                return ajax('非法参数',-1);
+            }
+            Db::table('mp_activity_tags')->where('id',$val['id'])->update($val);
+        }catch (\Exception $e) {
+
+            return ajax($e->getMessage(),-1);
+        }
+        return ajax([]);
+    }
+//删除标签
+    public function tagDel() {
+        $id = input('post.id');
+        try {
+            $exist = Db::table('mp_activity_tags')->where('id',$id)->find();
+            if(!$exist) {
+                return ajax('非法参数',-1);
+            }
+            Db::table('mp_activity_tags')->where('id','=',$id)->update(['del'=>1]);
+        }catch (\Exception $e) {
+            return ajax($e->getMessage(),-1);
+        }
+        return ajax();
+    }
+
 
 }
