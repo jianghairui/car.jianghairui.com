@@ -4,7 +4,7 @@
 <article class="page-container">
     <form class="form form-horizontal" id="form-article-add">
 
-        <div class="row cl" id="picsize">
+        <div class="row cl">
             <label class="form-label col-xs-4 col-sm-2"><span class="c-red">*</span></label>
             <div class="formControls col-xs-8 col-sm-9">
                     <span style="font-size: 16px">
@@ -12,7 +12,7 @@
                     </span>
             </div>
         </div>
-        <div class="row cl" id="pic">
+        <div class="row cl">
             <label class="form-label col-xs-4 col-sm-2">
                 <span id="btn-star" class="btn btn-primary btn-uploadstar radius ml-10">活动图片</span>
             </label>
@@ -20,6 +20,18 @@
                 <div class="uploader-thum-container">
                     <div id="fileList" class="uploader-list">
                         <img class="thumbnail" src="/{$info.pic}" alt="">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row cl">
+            <label class="form-label col-xs-4 col-sm-2">
+                <span id="btn-star2" class="btn btn-primary btn-uploadstar radius ml-10">活动图片</span>
+            </label>
+            <div class="formControls col-xs-8 col-sm-9">
+                <div class="uploader-thum-container">
+                    <div id="fileList2" class="uploader-list">
+                        <img class="thumbnail" src="/{$info.pic2}" alt="">
                     </div>
                 </div>
             </div>
@@ -63,6 +75,7 @@
             </div>
         </div>
         <input type="file" name="file" id="file" style="display: none;">
+        <input type="file" name="file2" id="file2" style="display: none;">
         <input type="hidden" name="id" value="{$info.id}">
     </form>
 </article>
@@ -132,19 +145,61 @@
         });
 
 
+        $("#file").change(function(e){
+            var imgBox = $("#fileList");
+            var file = $(this).get(0).files[0];//上传的文件
+            if(!file) {
+                $("#fileList").html('');
+            }
+            var limitsize = 256;
+            if(file.size > limitsize*1024) {
+                layer.alert('上传文件大小不超过'+limitsize+'Kb');
+                $(this).val('');
+                imgBox.html('');
+                return;
+            }
+            if(checkfile("file") !== true) {
+                $(this).val('');
+                imgBox.html('');
+                return false;
+            }
+            var img = e.target.files[0];
+            var src = window.URL.createObjectURL(img);
+            imgBox.html('<img class="thumbnail" src="'+src+'">');
+        });
+
+        $("#file2").change(function(e){
+            var imgBox = $("#fileList2");
+            var file = $(this).get(0).files[0];//上传的文件
+            if(!file) {
+                imgBox.html('');
+            }
+            var limitsize = 256;
+            if(file.size > limitsize*1024) {
+                layer.alert('上传文件大小不超过'+limitsize+'Kb');
+                $(this).val('');
+                imgBox.html('');
+                return;
+            }
+            if(checkfile("file2") !== true) {
+                $(this).val('');
+                imgBox.html('');
+                return false;
+            }
+            var img = e.target.files[0];
+            var src = window.URL.createObjectURL(img);
+            imgBox.html('<img class="thumbnail" src="'+src+'">');
+        });
+
         $("#btn-star").click(function(){
             $("#file").click();
-            $("#file").change(function(e){
-                if(checkfile('file') !== true) {
-                    $("#file").val('');
-                    $("#fileList").html('');
-                    return false
-                }
-                var img = e.target.files[0];
-                var src = window.URL.createObjectURL(img);
-                $("#fileList").html('<img class="thumbnail" src="'+src+'">');
-            });
         });
+
+        $("#btn-star2").click(function(){
+            $("#file2").click();
+        });
+
+
 
         var textlen1 = $("textarea[name='desc']").val().length;
         $("#textlen1").text(textlen1);

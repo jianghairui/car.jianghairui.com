@@ -15,7 +15,9 @@ class Activity extends Base {
         $page['query'] = http_build_query(input('param.'));
         $curr_page = input('param.page',1);
         $perpage = input('param.perpage',10);
-        $where = [];
+        $where = [
+            ['del','=',0]
+        ];
         if($param['search']) {
             $where[] = ['title','like',"%{$param['search']}%"];
         }
@@ -58,11 +60,24 @@ class Activity extends Base {
         }else {
             return ajax('请上传封面图',-1);
         }
+        if(isset($_FILES['file2'])) {
+            $info = upload('file2');
+            if($info['error'] === 0) {
+                $val['pic2'] = $info['data'];
+            }else {
+                return ajax($info['msg'],-1);
+            }
+        }else {
+            return ajax('请上传活动图',-1);
+        }
         try {
             Db::table('mp_activity')->insert($val);
         }catch (\Exception $e) {
             if(isset($val['pic'])) {
                 @unlink($val['pic']);
+            }
+            if(isset($val['pic2'])) {
+                @unlink($val['pic2']);
             }
             return ajax($e->getMessage(),-1);
         }
@@ -97,6 +112,14 @@ class Activity extends Base {
                 return ajax($info['msg'],-1);
             }
         }
+        if(isset($_FILES['file2'])) {
+            $info = upload('file2');
+            if($info['error'] === 0) {
+                $val['pic2'] = $info['data'];
+            }else {
+                return ajax($info['msg'],-1);
+            }
+        }
         $where = [
             ['id','=',$val['id']]
         ];
@@ -110,10 +133,16 @@ class Activity extends Base {
             if(isset($val['pic'])) {
                 @unlink($val['pic']);
             }
+            if(isset($val['pic2'])) {
+                @unlink($val['pic2']);
+            }
             return ajax($e->getMessage(),-1);
         }
         if(isset($val['pic'])) {
             @unlink($exist['pic']);
+        }
+        if(isset($val['pic2'])) {
+            @unlink($exist['pic2']);
         }
         return ajax([]);
     }
@@ -171,11 +200,10 @@ class Activity extends Base {
             if(!$exist) {
                 return ajax('非法操作',-1);
             }
-            Db::table('mp_activity')->where('id','=',$val['id'])->delete();
+            Db::table('mp_activity')->where('id','=',$val['id'])->update(['del'=>1]);
         }catch (\Exception $e) {
             return ajax($e->getMessage(),-1);
         }
-        @unlink($exist['pic']);
         return ajax([],1);
     }
     
@@ -199,23 +227,26 @@ class Activity extends Base {
             $where[] = ['contact','=',$param['contact']];
         }
         if($param['datemin']) {
-            $where[] = ['create_time','>=',strtotime(date('Y-m-d 00:00:00',strtotime($param['datemin'])))];
+            $where[] = ['o.create_time','>=',strtotime(date('Y-m-d 00:00:00',strtotime($param['datemin'])))];
         }
 
         if($param['datemax']) {
-            $where[] = ['create_time','<=',strtotime(date('Y-m-d 23:59:59',strtotime($param['datemax'])))];
+            $where[] = ['o.create_time','<=',strtotime(date('Y-m-d 23:59:59',strtotime($param['datemax'])))];
         }
 
         if($param['search']) {
-            $where[] = ['name|tel','like',"%{$param['search']}%"];
+            $where[] = ['o.name|o.tel','like',"%{$param['search']}%"];
         }
-        $order = ['id'=>'DESC'];
+        $order = ['o.id'=>'DESC'];
         try {
             $count = Db::table('mp_activity_order')->where($where)->count();
             $page['count'] = $count;
             $page['curr'] = $curr_page;
             $page['totalPage'] = ceil($count/$perpage);
-            $list = Db::table('mp_activity_order')->where($where)
+            $list = Db::table('mp_activity_order')->alias('o')
+                ->join('mp_activity a','o.activity_id=a.id','left')
+                ->where($where)
+                ->field('o.*,a.title')
                 ->order($order)
                 ->limit(($curr_page - 1)*$perpage,$perpage)->select();
             $tag_list = Db::table('mp_activity_tags')->where('del','=',0)->select();

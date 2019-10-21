@@ -27,7 +27,8 @@
             <th width="35">#</th>
             <th width="100">姓名</th>
             <th width="120">手机号</th>
-            <th>备注</th>
+            <th width="200">预约活动</th>
+            <th width="300">备注</th>
             <th width="130">预约时间</th>
             <th width="60">用户状态</th>
             <th width="80">操作</th>
@@ -39,6 +40,7 @@
             <td rowspan="2">{$li.id}</td>
             <td>{$li.name}</td>
             <td>{$li.tel}</td>
+            <td>{$li.title}</td>
             <td>{if $li['remark']}{$li.remark}{else /}无{/if}</td>
             <td>{$li.create_time|date='Y-m-d H:i:s'}</td>
             <td class="td-contact">
@@ -59,7 +61,7 @@
             </td>
         </tr>
         <tr>
-            <td colspan="5"><b style="margin-left: 15px">标签</b>: {if $li['tag_names']}
+            <td colspan="6"><b style="margin-left: 15px">标签</b>: {if $li['tag_names']}
                 {foreach $li['tag_names'] as $v}
                 <span class="label label-success radius">{$v}</span>
                 {/foreach}
