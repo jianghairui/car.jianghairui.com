@@ -239,7 +239,7 @@ class Activity extends Base {
         }
         $order = ['o.id'=>'DESC'];
         try {
-            $count = Db::table('mp_activity_order')->where($where)->count();
+            $count = Db::table('mp_activity_order')->alias('o')->where($where)->count();
             $page['count'] = $count;
             $page['curr'] = $curr_page;
             $page['totalPage'] = ceil($count/$perpage);
