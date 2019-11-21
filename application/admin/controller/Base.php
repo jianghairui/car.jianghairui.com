@@ -6,14 +6,9 @@
  * Time: 16:12
  */
 namespace app\admin\controller;
-use my\Auth;
 use think\Db;
 use think\Controller;
 use think\exception\HttpResponseException;
-
-require_once ROOT_PATH . '/extend/qiniu/autoload.php';
-use Qiniu\Config;
-use Qiniu\Storage\BucketManager;
 
 class Base extends Controller {
 
