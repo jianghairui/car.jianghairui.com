@@ -32,6 +32,7 @@
         <div class="form1 form3">
             <textarea name="remark" id="remark" placeholder="填写备注" maxlength="255"></textarea>
         </div>
+        <div class="detail_btn">提交</div>
         <div class="detail_content">
             <div class="detail_title">
                 <span class="line"></span>
@@ -47,7 +48,6 @@
         <div style="" id="detail">
             <?php echo $info['content'];?>
         </div>
-        <div class="detail_btn">提交</div>
         <input type="hidden" name="activity_id" value="{$info.id}">
     </form>
 </div>
